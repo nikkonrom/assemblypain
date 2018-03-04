@@ -24,38 +24,71 @@ start:
     mov ah, 9
     int 21h        ; output intro string at ds:dx
     
-    mov al, length      ;load max string length in al register for subsequent loading in string buffer 
-    mov [strbuf], al
-    mov [strbuf + 1], 0
-    lea dx, strbuf
-    mov ah, 0Ah
-    int 21h
-    mov al, [strbuf + 1]
-    add dx,2
+    mov al, length        ;load max string length in al register for subsequent loading in string buffer 
+    mov [strbuf], al      ;load max string length to first byte in string buffer
+    mov [strbuf + 1], 0   ;null the second string buffer byte (fact length)
+    lea dx, strbuf        ;load string buffer to dx
+    mov ah, 0Ah           ;load 10th DOS func to ah (string input)
+    int 21h               ;interrupt generating
+    mov al, [strbuf + 1]  ;saving fact string length into al
+    mov length, al
+    add dx,2              ;moving dx ptr to fisrt string character
     
+    mov bx, dx            ;moving dx ptr in bx register
+    xor ah,ah             ;null ah (for clear adding ax register (only ah))
+    add bx, ax            ;moving to str ending
+    add bx, 1             ;moving over 0Dh, stored in string ending (check in debugger)
+    mov byte ptr[bx], 0Ah ;adding a 0Ah over 0Dh dor new line in string ending ("sample/r/n" - inc C)
+    
+    push dx               ;storing dx
+    call newline          ;display newline in console
+    pop dx                ;restoring dx
+    
+    loop_reverse_string
     mov bx, dx
-    xor ah,ah
-    add bx, ax
-    add bx, 1    
-    mov byte ptr[bx], 0Ah
-    
-    push dx
-    call newline
-    pop dx
-    
+    call reverseword
     
     
     mov ah, 09h
     int 21h
     
+     
+    int 21h
     
     
     
-    
-    mov ax, 4c00h ; exit to operating system.
+    mov ah, 4Ch ; exit to operating system.
     int 21h
 
-newline proc near
+reverseword proc near
+        xor ax,ax
+        xor cx,cx
+        mov cl, length 
+        loopstore:
+        mov al, [bx]
+        push ax
+        inc bx
+        cmp [bx]," "
+        loopne loopstore
+        je restore
+        
+        restore:
+        xor cx,cx
+        mov cl, length
+        mov bx,dx
+        looprestore:
+        pop ax
+        mov [bx], al
+        inc bx
+        cmp [bx], " "
+        loopne looprestore
+        je exit
+        exit:
+        mov length, cl        
+        ret
+reverseword endp        
+
+newline proc near                  
         push ax
         mov dl,0Dh
         call outchar
