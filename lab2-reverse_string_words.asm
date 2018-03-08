@@ -7,9 +7,6 @@ data segment
     length db 250
 ends
 
-stack segment
-    dw   128  dup(0)
-ends
 
 code segment
 start:
@@ -38,24 +35,27 @@ start:
     xor ah,ah             ;null ah (for clear adding ax register (only ah))
     add bx, ax            ;moving to str ending
     add bx, 1             ;moving over 0Dh, stored in string ending (check in debugger)
-    mov byte ptr[bx], 0Ah ;adding a 0Ah over 0Dh dor new line in string ending ("sample/r/n" - inc C)
+    mov byte ptr[bx], 0Ah ;adding a 0Ah over 0Dh dor new line in string ending ("sample/r/n" - in C)
     
     push dx               ;storing dx
     call newline          ;display newline in console
     pop dx                ;restoring dx
     
-    loop_reverse_string
     mov bx, dx
-    call reverseword
+    mov si, dx
+    dec bx    
+    loop_reverse_string:
+    inc bx       
+    call reverseword    
+    cmp [bx], 0Dh
+    loopne loop_reverse_string
+    je continue 
     
     
+    continue:
+    mov dx, si    
     mov ah, 09h
-    int 21h
-    
-     
-    int 21h
-    
-    
+    int 21h  
     
     mov ah, 4Ch ; exit to operating system.
     int 21h
@@ -63,14 +63,19 @@ start:
 reverseword proc near
         xor ax,ax
         xor cx,cx
-        mov cl, length 
+        mov cl, length
+        mov dx, bx 
         loopstore:
+                
         mov al, [bx]
         push ax
         inc bx
-        cmp [bx]," "
+        cmp [bx], " "
+        je restore  
+        cmp [bx], 0Dh
+        je restore              
         loopne loopstore
-        je restore
+        
         
         restore:
         xor cx,cx
@@ -80,10 +85,14 @@ reverseword proc near
         pop ax
         mov [bx], al
         inc bx
-        cmp [bx], " "
-        loopne looprestore
+        cmp [bx], 0Dh
         je exit
+        cmp [bx], " "
+        je exit       
+        loopne looprestore
+        
         exit:
+        
         mov length, cl        
         ret
 reverseword endp        
