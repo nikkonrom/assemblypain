@@ -45,7 +45,11 @@ start:
     mov si, dx
     dec bx    
     loop_reverse_string:
-    inc bx       
+    inc bx
+    cmp [bx], " "
+    je loop_reverse_string
+    cmp [bx], 09h
+    je loop_reverse_string        
     call reverseword    
     cmp [bx], 0Dh
     loopne loop_reverse_string
@@ -73,7 +77,9 @@ reverseword proc near
         cmp [bx], " "
         je restore  
         cmp [bx], 0Dh
-        je restore              
+        je restore
+        cmp [bx], 09h
+        je restore                
         loopne loopstore
         
         
@@ -88,6 +94,8 @@ reverseword proc near
         cmp [bx], 0Dh
         je exit
         cmp [bx], " "
+        je exit
+        cmp [bx], 09h
         je exit       
         loopne looprestore
         
