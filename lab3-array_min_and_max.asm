@@ -75,20 +75,33 @@ start:
     add si, 2
     cmp [si], ax
     jg assignmax
-    continueloop: 
+    continueloopmax: 
     loop loopfindmax
     jmp endfindmax
     
     assignmax:
     mov ax, [si]
-    jmp continueloop
+    jmp continueloopmax
     
     endfindmax:  
     
-    loopfindmin:
     lea si, array
     mov cx, 29
-    mov ax, [si]
+    mov bx, [si]
+    
+    loopfindmin:
+    add si, 2
+    cmp [si], bx
+    jl assignmin
+    continueloopmin: 
+    loop loopfindmin
+    jmp endfindmin
+    
+    assignmin:
+    mov bx, [si]
+    jmp continueloopmin
+    
+    endfindmin:
     
     mov ax, 4c00h ; exit to operating system.
     int 21h
